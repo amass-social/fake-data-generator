@@ -26,3 +26,8 @@ For an up to date detailing of issues, see `docs/debt.md`
 Adding preference settings to the generated account data, ie:
   - emoji quickdraw preferences
   - color theme preferences
+
+## Credits
+
+List of (pretty wack) baby names:
+ - https://github.com/hadley/data-baby-names
