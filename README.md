@@ -9,10 +9,10 @@ This project is responsible for generating fake data to populate the website's f
   3. Generate groups out of clustered friends.
   3. For each pair/group of users, create a list of tags they talk about frequently.
   4. For each pair/group of users, generate a set of posts to be shared between them.
-    - Use tag preferences from step 3 to inform this process.
-    - Select from different types of posts (youtube links, articles, images, etc).
+      - Use tag preferences from step 3 to inform this process.
+      - Select from different types of posts (youtube links, articles, images, etc).
   5. For each shared post, populate it with reactions + chat responses.
-    - leave a small percentage of these as drafts
+      - leave a small percentage of these as drafts
 
 
 ## Instructions
