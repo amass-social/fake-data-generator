@@ -58,6 +58,19 @@ with open('./input/lorem_ipsum.json', 'r') as f:
                 used_words[word] = 1
 
 
+EMOJIS = []
+with open('./input/emoji_definitions.json', 'r') as f:
+    for emoji_title, obj in json.load(f).items():
+        if ('default' in obj):
+            EMOJIS.append(obj['default']['emoji'])
+
+
+IMAGES = []
+with open('./input/lorem_picsum.json', 'r') as f:
+    for img in json.load(f):
+        IMAGES.append(img['download_url'])
+
+
 # Class: UnixTime --------------------------------------------------------------
 # -> wrapper for making unix time easier to use
 
@@ -143,11 +156,11 @@ def get_random_text(min_words, max_words):
 
 
 def get_random_emoji():
-    return
+    return get_random_from_list(EMOJIS)
 
 
 def get_random_image():
-    return
+    return get_random_from_list(IMAGES)
 
 
 def get_random_from_list(l):
@@ -168,9 +181,12 @@ def generate_user_accounts(n):
         display_name, username = get_random_name()
         accounts.append({
             'id'          : get_new_id('user'),
+            'photo'       : get_random_image(),
             'displayName' : display_name,
             'username'    : username,
-            'dateJoined'  : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 5, 'months'), CURRENT_TIME)
+            'dateJoined'  : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 12, 'months'), CURRENT_TIME),
+            'email'       : f"{username}@email.com",
+            'phone'       : 'blank for now'
         })
     return accounts
 
