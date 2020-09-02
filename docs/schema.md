@@ -36,6 +36,8 @@ The current output of the generator, which isn't targeted for frontend or backen
   "dateJoined": unix epoch date for when this user created their account,
   "email" : "TEXT - the email that they signed up with",
   "phone" : "TEXT - the phone number they signed up with as a string (could be blank)",
+  "friends": [list of friend's user ids],
+  "groups": [list of group ids this user is a part of]
 }
 ```
 
