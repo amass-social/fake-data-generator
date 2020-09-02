@@ -5,8 +5,8 @@ This project is responsible for generating fake data to populate the website's f
 
 `generator.py` generates this fake data in a way that attempts to replicate how actual user data will be created in production.
   1. Create a pool of user accounts
-  2. Create "friend" connections between those user accounts.
-  3. Generate groups out of clustered friends.
+  2. Generate groups out of clustered friends.
+  3. Create "friend" connections between those user accounts.
   3. For each pair/group of users, create a list of tags they talk about frequently.
   4. For each pair/group of users, generate a set of posts to be shared between them.
       - Use tag preferences from step 3 to inform this process.
@@ -16,7 +16,10 @@ This project is responsible for generating fake data to populate the website's f
 
 
 ## Instructions
-More to come later.
+Run `generator.py` with optional flags:
+  - `-f` - the name of the file you want to write to (defaults to 'data'.json)
+      - Note: do not include .json in this filename
+  - `-n` - the number of users you want to create (defaults to 50)
 
 
 ## Issues

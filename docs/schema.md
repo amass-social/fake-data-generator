@@ -1,5 +1,15 @@
 # Schema
 
+## Ouptut
+The current output of the generator, which isn't targeted for frontend or backend use yet, is of the form:
+```json
+{
+  "users": [list of user objects],
+  "groups": [list of groups],
+  "posts": [list of posts],
+  "messages": [list of messages]
+}
+```
 
 ## Aggregated Objects
 

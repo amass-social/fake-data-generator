@@ -16,18 +16,30 @@ import argparse
 
 # Define argparse help messages
 ARGS = {
-    '-u': 'the total number of users that will be created.'
+    '-u': 'the total number of users that will be created.',
+    '-f': 'the name of the output file.'
 }
 
 # Parse args
 parser = argparse.ArgumentParser()
-parser.add_argument('-u', '--num-users', dest='num_users', type=int, default=30, help=ARGS['-u'])
+parser.add_argument('-u', '--num-users', dest='num_users', type=int, default=50,     help=ARGS['-u'])
+parser.add_argument('-f', '--filename',  dest='filename',  type=str, action='store', help=ARGS['-f'])
 args = parser.parse_args()
 
+FILENAME = args.filename if (args.filename is not None) else "data"
 
 # Hyper Parameters -------------------------------------------------------------
 
-ID_LENGTH = 12
+ID_LENGTH    = 12
+MIN_FRIENDS  = 4
+MAX_FRIENDS  = 10
+RATIO_GROUPS = 0.1 # <- the number of groups that are created (as a percentage of total number of users)
+MIN_TAGS     = 5
+MAX_TAGS     = 10
+MIN_POSTS    = 15
+MAX_POSTS    = 50
+MESSAGE_MIN  = 1
+MESSAGE_MAX  = 60
 
 # Constants --------------------------------------------------------------------
 
@@ -167,32 +179,191 @@ def get_random_from_list(l):
     index = random.randint(0, len(l) - 1)
     return l[index]
 
+# given a list, return a randomized sublist
+def get_random_sublist(l):
+    result = []
+    threshold = get_random_int(1, 10)
+    for item in l:
+        if (get_random_int(1, 10) > threshold):
+            result.append(item)
+    return result
 
 def get_random_int(min, max):
     return random.randint(min, max)
 
-
+def get_random_bool():
+    return get_random_int(0, 1) == 0
 
 # Main -------------------------------------------------------------------------
 
+# creates n random users and returns them
 def generate_user_accounts(n):
-    accounts = []
+    accounts    = []
+    account_ids = []
     for i in range(n):
         display_name, username = get_random_name()
+        id = get_new_id('user')
+        account_ids.append(id)
         accounts.append({
-            'id'          : get_new_id('user'),
+            'id'          : id,
             'photo'       : get_random_image(),
             'displayName' : display_name,
             'username'    : username,
             'dateJoined'  : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 12, 'months'), CURRENT_TIME),
             'email'       : f"{username}@email.com",
-            'phone'       : 'blank for now'
+            'phone'       : 'blank for now',
+            'friends'     : [],
+            'groups'      : []
         })
-    return accounts
+    return accounts, account_ids
+
+
+
+# creates friend groups for each user
+def create_friend_groups(users, user_ids):
+    groups, member_lookup = [], {}
+
+    # create the groups
+    for i in range(int(RATIO_GROUPS * len(users))):
+        id = get_new_id('group')
+        members = get_random_sublist(user_ids)
+        member_lookup[id] = members
+        groups.append({
+            'id'     : id,
+            'members': members,
+            'name'   : get_random_text(1, 4)
+        })
+
+    # add groups to user objects
+    user_to_groups = {}
+    for group in groups:
+        for user_id in group['members']:
+            user_to_groups.setdefault(user_id, [])
+            user_to_groups[user_id].append(group['id'])
+
+    for i in range(len(users)):
+        user_id = users[i]['id']
+        if (user_id in user_to_groups):
+            users[i]['groups'] = user_to_groups[user_id]
+    return users, groups, member_lookup
+
+
+# uses groups to create friend connections between our list of users
+def create_friend_connections(users, user_ids, groups, member_lookup):
+    for user in users:
+        friends = []
+        num_friends = get_random_int(MIN_FRIENDS, MAX_FRIENDS)
+
+        # try adding friends from groups
+        for group_id in user['groups']:
+            for group_member in member_lookup[group_id]:
+                if (group_member != user['id']):
+                    if (len(friends) < num_friends and get_random_bool() == True):
+                        friends.append(group_member)
+
+
+        # fill out friends from people not in groups
+        while(len(friends) < num_friends):
+            id = get_random_from_list(user_ids)
+            if (id not in friends and id != user['id']):
+                friends.append(id)
+        user['friends'] = friends
+    return users
+
+
+# creates a lookup table of {user/group-id -> [tags]}
+def create_tag_preferences(users, groups):
+    lookup = {}
+    for list_of_objects in [users, groups]:
+        for item in list_of_objects:
+            lookup[item['id']] = get_random_text(MIN_TAGS, MAX_TAGS)
+    return lookup
+
+
+# creates a list of posts sent between users or groups
+def create_posts(users, groups, tag_preferences):
+    def create_post(sender_id, receiver, tag):
+        return {
+            "id"         : get_new_id("post"),
+            "senderId"   : sender_id,
+            "receiverId" : receiver,
+            "title"      : get_random_text(1, 6),
+            "dateSent"   : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 12, 'months'), CURRENT_TIME),
+            "tags"       : tag,
+            "content"    : get_random_image(),
+            "type"       : get_random_from_list(["link", "image"]),
+            "reactions"  : [] # <- ADD THIS LATER
+        }
+
+    posts = []
+    for user in users:
+        for friend in user['friends']:
+            for i in range(get_random_int(MIN_POSTS, MAX_POSTS)):
+                posts.append(create_post(user['id'], friend, get_random_from_list(tag_preferences[user['id']])))
+
+    for group in groups:
+        for member in group['members']:
+            for i in range(get_random_int(0, MIN_POSTS)):
+                posts.append(create_post(member, group['id'], get_random_from_list(tag_preferences[group['id']])))
+
+    return posts
+
+
+# create messages
+def create_messages(users, groups, posts):
+
+    messages = []
+
+    def create_message(sender_id, post_id):
+        return {
+            'id': get_new_id('message'),
+            'senderId' : sender_id,
+            'postId'   : post_id,
+            'sent'     : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 12, 'months'), CURRENT_TIME),
+            'content'  : get_random_text(MESSAGE_MIN, MESSAGE_MAX),
+            'type'     : 'text',
+            'reactions': []
+        }
+
+    # 1) add the "description" messages that are sent at the same time as the post
+    for post in posts:
+        message = create_message(post['senderId'], post['id'])
+        messages.append(message)
+
+    return messages
 
 
 def generate():
-    users = generate_user_accounts(args.num_users)
+
+    # 1) create user accounts
+    users, user_ids = generate_user_accounts(args.num_users)
+
+    # 2) create groups out of users
+    users, groups, member_lookup = create_friend_groups(users, user_ids)
+
+    # 3) use groups to create friend connections between users
+    users = create_friend_connections(users, user_ids, groups, member_lookup)
+
+    # 4) create a list of frequently talked about tags for each user or group
+    tag_preferences = create_tag_preferences(users, groups)
+
+    # 5) Create posts
+    posts = create_posts(users, groups, tag_preferences)
+
+    # 6) create chat messages on posts
+    messages = create_messages(users, groups, posts)
+
+
+    # export results to a file
+    to_export = {
+        'users'    : users,
+        'groups'   : groups,
+        'posts'    : posts,
+        'messages' : messages
+    }
+    with open(f"./output/{FILENAME}.json", "w") as f:
+        json.dump(to_export, f)
+    print(f"exported to {FILENAME}.json")
 
 # Run --------------------------------------------------------------------------
 
