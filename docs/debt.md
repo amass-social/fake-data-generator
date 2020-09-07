@@ -15,4 +15,5 @@
   8. The sender's original messages have a different time than the post
   9. Posts aren't aware of what the messages are attributed to them
   10. Posts aren't left as drafts
-  11. `IMPORTANT` the output of the generator isn't targeted for database storage or frontend usage yet. The data will look different when modified for these use cases.
+  11. `IMPORTANT` the output of the generator isn't targeted for database storageThe data will look different when modified for that use cases.
+  12. The frontend object is not partitioned into smaller, more loadable pieces that would be used in production. 
