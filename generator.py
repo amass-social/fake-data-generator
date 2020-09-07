@@ -288,17 +288,21 @@ def create_reactions(users):
 
 def create_post(sender_id, receiver, tag):
     member_ids = []
+    receiver_id = '' # either a group or user id
 
     # check if reciever is a user or group
     if type(receiver) is str: # user
         member_ids = [receiver]
+        receiver_id = receiver
     else: #group
+
         member_ids = receiver['members']
+        receiver_id = receiver['id']
 
     return {
         "id"         : get_new_id("post"),
         "senderId"   : sender_id,
-        "receiverId" : receiver,
+        "receiverId" : receiver_id,
         "title"      : get_random_text(1, 6),
         "dateSent"   : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 12, 'months'), CURRENT_TIME),
         "tags"       : tag,
