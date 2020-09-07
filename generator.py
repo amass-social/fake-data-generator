@@ -218,6 +218,10 @@ def generate_user_accounts(n):
     return accounts, account_ids
 
 
+def find_group(groups, group_id):
+    for group in groups:
+        if group['id'] == group_id:
+            return group
 
 # creates friend groups for each user
 def create_friend_groups(users, user_ids):
@@ -337,15 +341,36 @@ def create_message(sender_id, post_id):
         'reactions': []
     }
 
+def create_responses(user_ids, post_id):
+    responses = []
+    for user_id in user_ids:
+        # create a small, random number of responses for each user
+        for _ in range(random.randint(0, 3), 3):
+            response = create_message(user_id, post_id)
+            responses.append(response)
+    return responses
+
+
 # create messages
 def create_messages(users, groups, posts):
-
     messages = []
 
-    # 1) add the "description" messages that are sent at the same time as the post
     for post in posts:
+        # 1) add the "description" messages that are sent at the same time as the post
         message = create_message(post['senderId'], post['id'])
         messages.append(message)
+
+        # 2) get all users that are apart of the post conversation
+        user_ids = [post['senderId']]
+        if post['receiverId'][0] == 'g':
+            group = find_group(groups, post['receiverId'])
+            user_ids += group['members']
+        else:
+            user_ids += [post['receiverId']]
+
+        # 3) create response from post members
+        responses = create_responses(user_ids, post['id'])
+        messages += responses
 
     return messages
 
