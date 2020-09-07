@@ -14,6 +14,7 @@ This project is responsible for generating fake data to populate the website's f
   5. For each shared post, populate it with reactions + chat responses.
       - leave a small percentage of these as drafts
 
+`frontend_converter.py` takes the output of `generator.py` and filters it into an object focused around a single logged in user for the frontend to load.
 
 ## Instructions
 Run `generator.py` with optional flags:
@@ -21,6 +22,10 @@ Run `generator.py` with optional flags:
       - Note: do not include .json in this filename
   - `-n` - the number of users you want to create (defaults to 50)
 
+Run `frontend_converter.py` with optional flags:
+  - `-i` - the name of the input file (ie: the file created by generator.py)
+  - `-o` - the name of the output file (defaults to 'frontend-data'.json)
+  Note: do not include the file extension in -i and -o flags.
 
 ## Issues
 For an up to date detailing of issues, see `docs/debt.md`
