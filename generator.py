@@ -279,22 +279,40 @@ def create_tag_preferences(users, groups):
             lookup[item['id']] = get_random_text(MIN_TAGS, MAX_TAGS)
     return lookup
 
+def create_reactions(users):
+    reactions = []
+    for user in users:
+        if random.random() > .3:
+            reactions.append({"userId": user, "emoji": get_random_emoji()})
+    return reactions
+
+def create_post(sender_id, receiver, tag):
+    member_ids = []
+    receiver_id = '' # either a group or user id
+
+    # check if reciever is a user or group
+    if type(receiver) is str: # user
+        member_ids = [receiver]
+        receiver_id = receiver
+    else: #group
+
+        member_ids = receiver['members']
+        receiver_id = receiver['id']
+
+    return {
+        "id"         : get_new_id("post"),
+        "senderId"   : sender_id,
+        "receiverId" : receiver_id,
+        "title"      : get_random_text(1, 6),
+        "dateSent"   : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 12, 'months'), CURRENT_TIME),
+        "tags"       : tag,
+        "content"    : get_random_image(),
+        "type"       : get_random_from_list(["link", "image"]),
+        "reactions"  : create_reactions([sender_id] + member_ids)
+    }
 
 # creates a list of posts sent between users or groups
 def create_posts(users, groups, tag_preferences):
-    def create_post(sender_id, receiver, tag):
-        return {
-            "id"         : get_new_id("post"),
-            "senderId"   : sender_id,
-            "receiverId" : receiver,
-            "title"      : get_random_text(1, 6),
-            "dateSent"   : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 12, 'months'), CURRENT_TIME),
-            "tags"       : tag,
-            "content"    : get_random_image(),
-            "type"       : get_random_from_list(["link", "image"]),
-            "reactions"  : [] # <- ADD THIS LATER
-        }
-
     posts = []
     for user in users:
         for friend in user['friends']:
@@ -304,26 +322,25 @@ def create_posts(users, groups, tag_preferences):
     for group in groups:
         for member in group['members']:
             for i in range(get_random_int(0, MIN_POSTS)):
-                posts.append(create_post(member, group['id'], get_random_from_list(tag_preferences[group['id']])))
+                posts.append(create_post(member, group, get_random_from_list(tag_preferences[group['id']])))
 
     return posts
 
+def create_message(sender_id, post_id):
+    return {
+        'id': get_new_id('message'),
+        'senderId' : sender_id,
+        'postId'   : post_id,
+        'sent'     : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 12, 'months'), CURRENT_TIME),
+        'content'  : get_random_text(MESSAGE_MIN, MESSAGE_MAX),
+        'type'     : 'text',
+        'reactions': []
+    }
 
 # create messages
 def create_messages(users, groups, posts):
 
     messages = []
-
-    def create_message(sender_id, post_id):
-        return {
-            'id': get_new_id('message'),
-            'senderId' : sender_id,
-            'postId'   : post_id,
-            'sent'     : get_random_date(UNIX_TIME.sub(CURRENT_TIME, 12, 'months'), CURRENT_TIME),
-            'content'  : get_random_text(MESSAGE_MIN, MESSAGE_MAX),
-            'type'     : 'text',
-            'reactions': []
-        }
 
     # 1) add the "description" messages that are sent at the same time as the post
     for post in posts:
